@@ -33,6 +33,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.delay
+import uk.ac.tees.mad.stridesync.ui.SplashScreen
 import uk.ac.tees.mad.stridesync.ui.theme.AppColors
 import uk.ac.tees.mad.stridesync.ui.theme.StrideSyncTheme
 
@@ -50,64 +51,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun sex(){
-
-}
-@Composable
-fun SplashScreen(navController: NavController) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-
-    // Navigate after 2 seconds
-    LaunchedEffect(Unit) {
-        delay(2000)
-        // Replace with login/home check later
-//        navController.navigate("auth") {
-//            popUpTo("splash") { inclusive = true }
-//        }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(AppColors.Primary),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.app_icon),
-                contentDescription = "StrideSync Logo",
-                modifier = Modifier.size(120.dp)
-                    .clip(CircleShape).shadow(8.dp)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // App Title
-            Text(
-                text = "StrideSync",
-                color = AppColors.Surface,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Tagline
-            Text(
-                text = "Track. Compete. Achieve.",
-                color = AppColors.Surface.copy(alpha = 0.8f),
-                fontSize = 16.sp,
-                fontStyle = FontStyle.Italic
-            )
         }
     }
 }
