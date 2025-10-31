@@ -33,6 +33,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.delay
+import uk.ac.tees.mad.stridesync.ui.AuthenticationScreen
 import uk.ac.tees.mad.stridesync.ui.SplashScreen
 import uk.ac.tees.mad.stridesync.ui.theme.AppColors
 import uk.ac.tees.mad.stridesync.ui.theme.StrideSyncTheme
@@ -45,9 +46,15 @@ class MainActivity : ComponentActivity() {
             StrideSyncTheme {
 
                 val navController = rememberNavController()
-                NavHost(navController = navController, startDestination = "splash"){
+                NavHost(navController = navController, startDestination = "Auth"){
                     composable("splash"){
                         SplashScreen(navController)
+                    }
+                    composable("Auth"){
+                        AuthenticationScreen(
+                            onAuthSuccess = { navController.navigate("home") },
+                            onGoogleSignInClick = { /* Handle Google Sign-In */ }
+                        )
                     }
                 }
             }
