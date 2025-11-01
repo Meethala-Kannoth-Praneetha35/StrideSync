@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "988852421439",
+    "project_id": "stridesync-99229",
+    "storage_bucket": "stridesync-99229.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:988852421439:android:38e00df1783c7c0839498a",
+        "android_client_info": {
+          "package_name": "uk.ac.tees.mad.stridesync"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBUJy9f2wFi15hzQs7JMNUlgXYgQZ68EbA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
