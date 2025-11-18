@@ -28,16 +28,20 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
+import uk.ac.tees.mad.stridesync.ui.AuthViewModel
 import uk.ac.tees.mad.stridesync.ui.AuthenticationScreen
 import uk.ac.tees.mad.stridesync.ui.SplashScreen
 import uk.ac.tees.mad.stridesync.ui.theme.AppColors
 import uk.ac.tees.mad.stridesync.ui.theme.StrideSyncTheme
 
+@AndroidEntryPoint  
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,6 +49,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             StrideSyncTheme {
 
+                val authViewModel = hiltViewModel<AuthViewModel>()
                 val navController = rememberNavController()
                 NavHost(navController = navController, startDestination = "Auth"){
                     composable("splash"){
@@ -52,8 +57,7 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("Auth"){
                         AuthenticationScreen(
-                            onAuthSuccess = { navController.navigate("home") },
-                            onGoogleSignInClick = { /* Handle Google Sign-In */ }
+                            authViewModel, navController
                         )
                     }
                 }

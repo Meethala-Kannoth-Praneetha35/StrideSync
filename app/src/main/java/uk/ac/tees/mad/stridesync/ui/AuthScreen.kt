@@ -1,5 +1,6 @@
 package uk.ac.tees.mad.stridesync.ui
 
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.animation.AnimatedVisibility
@@ -31,6 +32,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -63,11 +65,12 @@ import uk.ac.tees.mad.stridesync.ui.theme.AppColors
 
 @Composable
 fun AuthenticationScreen(
-    onAuthSuccess: () -> Unit,
-    onGoogleSignInClick: () -> Unit
+    viewModel : AuthViewModel,
+    navController: NavController
 ) {
     var isLogin by remember { mutableStateOf(true) }
-
+    val context = LocalContext.current
+    val amILoading = viewModel.loading.value
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
@@ -155,25 +158,33 @@ fun AuthenticationScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { onAuthSuccess() },
+                onClick = { if (isLogin) viewModel.login(context, email, password) else viewModel.signUp(context, email, password) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text(
-                    text = if (isLogin) "Login" else "Sign Up",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = AppColors.Surface
-                )
+                if (amILoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = AppColors.Surface,
+                        strokeWidth = 2.dp
+                    )
+                }else {
+                    Text(
+                        text = if (isLogin) "Login" else "Sign Up",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = AppColors.Surface
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedButton(
-                onClick = { onGoogleSignInClick() },
+                onClick = { Toast.makeText(context, "Google login will be available very soon.", Toast.LENGTH_SHORT).show() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
