@@ -37,11 +37,12 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.delay
 import uk.ac.tees.mad.stridesync.ui.AuthViewModel
 import uk.ac.tees.mad.stridesync.ui.AuthenticationScreen
+import uk.ac.tees.mad.stridesync.ui.HomeScreen
 import uk.ac.tees.mad.stridesync.ui.SplashScreen
 import uk.ac.tees.mad.stridesync.ui.theme.AppColors
 import uk.ac.tees.mad.stridesync.ui.theme.StrideSyncTheme
 
-@AndroidEntryPoint  
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -51,14 +52,20 @@ class MainActivity : ComponentActivity() {
 
                 val authViewModel = hiltViewModel<AuthViewModel>()
                 val navController = rememberNavController()
-                NavHost(navController = navController, startDestination = "Auth"){
+                NavHost(navController = navController, startDestination = "splash"){
                     composable("splash"){
-                        SplashScreen(navController)
+                        SplashScreen(authViewModel,navController)
                     }
-                    composable("Auth"){
+                    composable("auth"){
                         AuthenticationScreen(
                             authViewModel, navController
                         )
+                    }
+                    composable("home"){
+                        HomeScreen(onHistoryClick = {},
+                        onLeaderboardClick = {},
+                        onProfileClick = {},
+                        onNotificationsClick = {})
                     }
                 }
             }

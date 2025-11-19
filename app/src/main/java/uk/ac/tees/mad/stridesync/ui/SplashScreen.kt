@@ -40,21 +40,26 @@ import uk.ac.tees.mad.stridesync.R
 import uk.ac.tees.mad.stridesync.ui.theme.AppColors
 
 @Composable
-fun SplashScreen(navController: NavController) {
+fun SplashScreen(viewModel : AuthViewModel, navController: NavController) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var isTrue by remember {
         mutableStateOf(false)
     }
-    // Navigate after 2 seconds
+    val login = viewModel.loginBoolean.value
     LaunchedEffect(Unit) {
         delay(400)
         isTrue = true
         delay(2000)
-        // Replace with login/home check later
-//        navController.navigate("auth") {
-//            popUpTo("splash") { inclusive = true }
-//        }
+        if (login) {
+            navController.navigate("home") {
+                popUpTo("splash") { inclusive = true }
+            }
+        } else {
+            navController.navigate("auth") {
+                popUpTo("splash") { inclusive = true }
+            }
+        }
     }
 
     Box(

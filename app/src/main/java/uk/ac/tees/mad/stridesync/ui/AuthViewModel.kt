@@ -20,8 +20,11 @@ class AuthViewModel @Inject constructor(
     val firestore : FirebaseFirestore
 ) : ViewModel() {
 
+    val loginBoolean = mutableStateOf(false)
     init {
-
+        if(authentication.currentUser != null){
+            loginBoolean.value = true
+        }
     }
 
     val loading = mutableStateOf(false)
