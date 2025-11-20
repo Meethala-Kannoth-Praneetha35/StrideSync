@@ -1,8 +1,17 @@
 package uk.ac.tees.mad.stridesync.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
@@ -50,9 +59,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -61,7 +67,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -72,19 +77,50 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import uk.ac.tees.mad.stridesync.R
 import uk.ac.tees.mad.stridesync.ui.theme.AppColors
+import java.util.Calendar
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
+    viewModel: StepViewModel,
     userName: String = "John",
-    todaySteps: Int = 5423,
-    stepGoal: Int = 10000,
+    stepGoal: Int = 12000,
     onHistoryClick: () -> Unit,
     onLeaderboardClick: () -> Unit,
     onProfileClick: () -> Unit,
     onNotificationsClick: () -> Unit
 ) {
+
+    val todaySteps by viewModel.todaySteps.collectAsState()
+    val distanceMeters by viewModel.distanceMeters.collectAsState()
+    val distanceKm by viewModel.distanceKm.collectAsState()
+    val kcal by viewModel.kcal.collectAsState()
+    val elapsedTime by viewModel.elapsedTime.collectAsState()
+    val isTracking by viewModel.isTracking.collectAsState()
+
+    val context = LocalContext.current
+    var hasPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.ACTIVITY_RECOGNITION
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasPermission = isGranted
+        if (!isGranted) {
+            Toast.makeText(context, "Permission required for step tracking", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val calendar = Calendar.getInstance()
+    val todayDate = "${calendar.get(Calendar.MONTH) + 1}/${calendar.get(Calendar.DAY_OF_MONTH)}/${calendar.get(Calendar.YEAR)}"
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = AppColors.Background,
@@ -102,7 +138,7 @@ fun HomeScreen(
                 actions = {
                     IconButton(onClick = onNotificationsClick) {
                         Icon(
-                            Icons.Default.Notifications,
+                            imageVector = Icons.Default.Notifications,
                             contentDescription = "Notifications",
                             tint = AppColors.Primary
                         )
@@ -121,38 +157,98 @@ fun HomeScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-
-            // --- Steps Card ---
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(250.dp),
+                    .height(320.dp),
                 shape = RoundedCornerShape(20.dp),
                 colors = CardDefaults.cardColors(containerColor = AppColors.Surface),
                 elevation = CardDefaults.cardElevation(6.dp)
             ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    StepProgressIndicator(
-                        steps = todaySteps,
-                        goal = stepGoal
+                    Text(
+                        text = "Today's Date: $todayDate",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            color = AppColors.TextPrimary,
+                            fontWeight = FontWeight.Medium
+                        )
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box(
+                        modifier = Modifier.weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        StepProgressIndicator(steps = todaySteps, goal = stepGoal)
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        StatItem(title = "Calories", value = "${kcal.toInt()} kcal")
+                        StatItem(title = "Distance", value = "${String.format("%.2f", distanceKm)} km")
+                        StatItem(title = "Meters", value = "${distanceMeters.toInt()} m")
+                        StatItem(title = "Time", value = formatTime(elapsedTime))
+                    }
                 }
             }
 
-            // --- Quick Actions Row ---
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+            Button(
+                onClick = {
+                    if (!hasPermission) {
+                        permissionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
+                    } else {
+                        if (isTracking) {
+                            viewModel.stopTracking()
+                        } else {
+                            viewModel.startTracking()
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isTracking) AppColors.Accent else AppColors.Primary
+                )
             ) {
-                QuickActionCard("History", Icons.Default.DateRange, AppColors.Secondary, onHistoryClick)
-                QuickActionCard("Leaderboard", Icons.Default.EmojiEvents, AppColors.Accent, onLeaderboardClick)
-                QuickActionCard("Profile", Icons.Default.Person, AppColors.Primary, onProfileClick)
+                Text(
+                    text = if (!hasPermission) "Grant Permission" else if (isTracking) "Stop Tracking" else "Start Tracking",
+                    color = Color.White,
+                    fontSize = 16.sp
+                )
             }
 
-            // --- Highlights Section ---
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                QuickActionCard(
+                    title = "History",
+                    icon = Icons.Default.DateRange,
+                    bgColor = AppColors.Secondary,
+                    onClick = onHistoryClick
+                )
+                QuickActionCard(
+                    title = "Leaderboard",
+                    icon = Icons.Default.EmojiEvents,
+                    bgColor = AppColors.Accent,
+                    onClick = onLeaderboardClick
+                )
+                QuickActionCard(
+                    title = "Profile",
+                    icon = Icons.Default.Person,
+                    bgColor = AppColors.Primary,
+                    onClick = onProfileClick
+                )
+            }
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -179,6 +275,30 @@ fun HomeScreen(
             }
         }
     }
+}
+
+@Composable
+fun StatItem(title: String, value: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = value,
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = AppColors.Primary
+        )
+        Text(
+            text = title,
+            fontSize = 12.sp,
+            color = AppColors.TextSecondary
+        )
+    }
+}
+
+fun formatTime(millis: Long): String {
+    val seconds = (millis / 1000) % 60
+    val minutes = (millis / (1000 * 60)) % 60
+    val hours = (millis / (1000 * 60 * 60)) % 24
+    return String.format("%02d:%02d:%02d", hours, minutes, seconds)
 }
 
 @Composable
@@ -222,8 +342,8 @@ fun QuickActionCard(
             .size(100.dp)
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = bgColor.copy(alpha = 0.1f)),
-        elevation = CardDefaults.cardElevation(4.dp)
+        colors = CardDefaults.cardColors(containerColor = bgColor.copy(alpha = 0.2f)),
+        elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(
             modifier = Modifier
@@ -243,7 +363,8 @@ fun QuickActionCard(
                 text = title,
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.SemiBold,
-                    color = AppColors.TextPrimary
+                    color = AppColors.TextPrimary,
+                    fontSize = 12.sp
                 )
             )
         }

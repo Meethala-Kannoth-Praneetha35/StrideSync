@@ -39,6 +39,7 @@ import uk.ac.tees.mad.stridesync.ui.AuthViewModel
 import uk.ac.tees.mad.stridesync.ui.AuthenticationScreen
 import uk.ac.tees.mad.stridesync.ui.HomeScreen
 import uk.ac.tees.mad.stridesync.ui.SplashScreen
+import uk.ac.tees.mad.stridesync.ui.StepViewModel
 import uk.ac.tees.mad.stridesync.ui.theme.AppColors
 import uk.ac.tees.mad.stridesync.ui.theme.StrideSyncTheme
 
@@ -52,6 +53,7 @@ class MainActivity : ComponentActivity() {
 
                 val authViewModel = hiltViewModel<AuthViewModel>()
                 val navController = rememberNavController()
+                val stepViewModel = hiltViewModel<StepViewModel>()
                 NavHost(navController = navController, startDestination = "splash"){
                     composable("splash"){
                         SplashScreen(authViewModel,navController)
@@ -62,7 +64,9 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                     composable("home"){
-                        HomeScreen(onHistoryClick = {},
+                        HomeScreen(
+                            viewModel = stepViewModel,
+                            onHistoryClick = {},
                         onLeaderboardClick = {},
                         onProfileClick = {},
                         onNotificationsClick = {})
