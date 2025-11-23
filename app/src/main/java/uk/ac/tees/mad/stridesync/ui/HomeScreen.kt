@@ -308,6 +308,7 @@ fun StepProgressIndicator(steps: Int, goal: Int) {
     Box(contentAlignment = Alignment.Center) {
         CircularProgressIndicator(
             progress = progress,
+            trackColor = Color.LightGray,
             modifier = Modifier.size(180.dp),
             strokeWidth = 12.dp,
             color = AppColors.Primary

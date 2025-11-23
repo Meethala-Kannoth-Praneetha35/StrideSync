@@ -3,6 +3,7 @@ package uk.ac.tees.mad.stridesync.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Job
@@ -13,9 +14,14 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import uk.ac.tees.mad.stridesync.utils.StepCounterManager
 import kotlinx.coroutines.flow.MutableStateFlow
+import uk.ac.tees.mad.stridesync.data.StepRepository.StepRepository
 
 @HiltViewModel
-class StepViewModel @Inject constructor(application: Application) : AndroidViewModel(application) {
+class StepViewModel @Inject constructor(
+    application: Application,
+    private val repository: StepRepository,
+    private val auth: FirebaseAuth
+) : AndroidViewModel(application) {
     private val stepCounterManager = StepCounterManager(application)
 
     private val _elapsedTime = MutableStateFlow(0L)
@@ -40,8 +46,10 @@ class StepViewModel @Inject constructor(application: Application) : AndroidViewM
     private var timerJob: Job? = null
 
     init {
-        stepCounterManager.onReset = {
-            _elapsedTime.value = 0L
+        viewModelScope.launch {
+            todaySteps.collect { steps ->
+                repository.saveSteps(steps, userId = auth.currentUser!!.uid)
+            }
         }
     }
 
