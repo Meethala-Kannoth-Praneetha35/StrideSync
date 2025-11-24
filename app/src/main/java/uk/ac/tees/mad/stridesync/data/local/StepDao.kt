@@ -14,6 +14,9 @@ interface StepDao {
     @Query("SELECT * FROM steps WHERE date = :date LIMIT 1")
     fun getStepsByDate(date: String): Flow<StepEntity?>
 
+    @Query("SELECT * FROM steps WHERE date = :date LIMIT 1")
+    suspend fun getStepsByDateSync(date: String): StepEntity?
+
     @Query("SELECT * FROM steps ORDER BY date DESC")
     fun getAllSteps(): Flow<List<StepEntity>>
 }

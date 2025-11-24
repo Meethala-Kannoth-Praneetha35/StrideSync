@@ -5,11 +5,13 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import dagger.hilt.android.qualifiers.ApplicationContext
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.util.*
 
-class StepCounterManager(context: Context) : SensorEventListener {
+class StepCounterManager @Inject constructor(@ApplicationContext context: Context) : SensorEventListener {
 
     private var sensorManager: SensorManager =
         context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -23,6 +25,10 @@ class StepCounterManager(context: Context) : SensorEventListener {
     val todaySteps: StateFlow<Int> = _todaySteps
 
     private var todayDate: Int = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
+
+    fun setInitialSteps(steps: Int) {
+        _todaySteps.value = steps
+    }
 
     fun startListening() {
         stepDetector?.also {
@@ -50,7 +56,7 @@ class StepCounterManager(context: Context) : SensorEventListener {
         when (event.sensor.type) {
             Sensor.TYPE_STEP_DETECTOR -> {
                 if (event.values[0] == 1.0f) {
-                    _todaySteps.value = _todaySteps.value + 1
+                    _todaySteps.value += 1
                 }
             }
 
@@ -64,6 +70,5 @@ class StepCounterManager(context: Context) : SensorEventListener {
         }
     }
 
-    var onReset: () -> Unit = {}
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
 }

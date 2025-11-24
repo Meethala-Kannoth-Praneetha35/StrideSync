@@ -1,6 +1,10 @@
 package uk.ac.tees.mad.stridesync.ui
 
 import android.app.Application
+import android.app.Service
+import android.content.ComponentName
+import android.content.Intent
+import android.os.Build
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
@@ -12,9 +16,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import uk.ac.tees.mad.stridesync.utils.StepCounterManager
-import kotlinx.coroutines.flow.MutableStateFlow
+import uk.ac.tees.mad.stridesync.services.StepTrackingService
 import uk.ac.tees.mad.stridesync.data.StepRepository.StepRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import android.app.ActivityManager
+import android.content.Context
 
 @HiltViewModel
 class StepViewModel @Inject constructor(
@@ -22,7 +28,6 @@ class StepViewModel @Inject constructor(
     private val repository: StepRepository,
     private val auth: FirebaseAuth
 ) : AndroidViewModel(application) {
-    private val stepCounterManager = StepCounterManager(application)
 
     private val _elapsedTime = MutableStateFlow(0L)
     val elapsedTime: StateFlow<Long> = _elapsedTime
@@ -30,7 +35,8 @@ class StepViewModel @Inject constructor(
     private val _isTracking = MutableStateFlow(false)
     val isTracking: StateFlow<Boolean> = _isTracking
 
-    val todaySteps: StateFlow<Int> = stepCounterManager.todaySteps
+    val todaySteps: StateFlow<Int> = repository.getTodaySteps()
+        .map { entity -> entity?.steps ?: 0 }
         .stateIn(viewModelScope, SharingStarted.Lazily, 0)
 
     private val strideLength = 0.762f
@@ -47,8 +53,29 @@ class StepViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            todaySteps.collect { steps ->
-                repository.saveSteps(steps, userId = auth.currentUser!!.uid)
+            val todayStepsFromRoom = repository.getStepsByDateSync(repository.todayDate())?.steps ?: 0
+            println("Initial steps from Room: $todayStepsFromRoom")
+            // Check if StepTrackingService is running
+            if (isServiceRunning(StepTrackingService::class.java)) {
+                _isTracking.value = true
+                startTimerIfNotRunning()
+            }
+        }
+    }
+
+    private fun isServiceRunning(serviceClass: Class<out Service>): Boolean {
+        val manager = getApplication<Application>().getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        @Suppress("DEPRECATION")
+        return manager.getRunningServices(Integer.MAX_VALUE).any { it.service.className == serviceClass.name }
+    }
+
+    private fun startTimerIfNotRunning() {
+        if (timerJob?.isActive != true) {
+            timerJob = viewModelScope.launch {
+                while (true) {
+                    kotlinx.coroutines.delay(1000)
+                    _elapsedTime.value += 1000
+                }
             }
         }
     }
@@ -56,19 +83,23 @@ class StepViewModel @Inject constructor(
     fun startTracking() {
         if (_isTracking.value) return
         _isTracking.value = true
-        stepCounterManager.startListening()
-        timerJob = viewModelScope.launch {
-            while (true) {
-                kotlinx.coroutines.delay(1000)
-                _elapsedTime.value += 1000
-            }
-        }
+        val intent = Intent(getApplication(), StepTrackingService::class.java)
+        getApplication<Application>().startForegroundService(intent)
+        startTimerIfNotRunning()
     }
 
     fun stopTracking() {
         if (!_isTracking.value) return
         _isTracking.value = false
-        stepCounterManager.stopListening()
+        val intent = Intent(getApplication(), StepTrackingService::class.java)
+        getApplication<Application>().stopService(intent)
         timerJob?.cancel()
+    }
+
+    fun refreshSteps() {
+        viewModelScope.launch {
+            val todayStepsFromRoom = repository.getStepsByDateSync(repository.todayDate())?.steps ?: 0
+            println("Refreshed steps from Room: $todayStepsFromRoom")
+        }
     }
 }

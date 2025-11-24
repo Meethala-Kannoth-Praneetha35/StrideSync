@@ -2,6 +2,7 @@ package uk.ac.tees.mad.stridesync.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -91,7 +92,6 @@ fun HomeScreen(
     onProfileClick: () -> Unit,
     onNotificationsClick: () -> Unit
 ) {
-
     val todaySteps by viewModel.todaySteps.collectAsState()
     val distanceMeters by viewModel.distanceMeters.collectAsState()
     val distanceKm by viewModel.distanceKm.collectAsState()
@@ -100,7 +100,7 @@ fun HomeScreen(
     val isTracking by viewModel.isTracking.collectAsState()
 
     val context = LocalContext.current
-    var hasPermission by remember {
+    var hasActivityPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(
                 context,
@@ -109,13 +109,48 @@ fun HomeScreen(
         )
     }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
+    var hasNotificationPermission by remember {
+        mutableStateOf(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ContextCompat.checkSelfPermission(
+                    context,
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            } else true
+        )
+    }
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        hasPermission = isGranted
-        if (!isGranted) {
-            Toast.makeText(context, "Permission required for step tracking", Toast.LENGTH_SHORT).show()
+        hasNotificationPermission = isGranted
+        if (isGranted) {
+            viewModel.startTracking()
+        } else {
+            Toast.makeText(context, "Notification permission required for foreground service", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    val activityPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasActivityPermission = isGranted
+        if (isGranted) {
+            viewModel.refreshSteps()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasNotificationPermission) {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            } else {
+                viewModel.startTracking()
+            }
+        } else {
+            Toast.makeText(context, "Activity recognition permission required for step tracking", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshSteps()
     }
 
     val calendar = Calendar.getInstance()
@@ -201,8 +236,10 @@ fun HomeScreen(
 
             Button(
                 onClick = {
-                    if (!hasPermission) {
-                        permissionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
+                    if (!hasActivityPermission) {
+                        activityPermissionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION)
+                    } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasNotificationPermission) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     } else {
                         if (isTracking) {
                             viewModel.stopTracking()
@@ -219,7 +256,7 @@ fun HomeScreen(
                 )
             ) {
                 Text(
-                    text = if (!hasPermission) "Grant Permission" else if (isTracking) "Stop Tracking" else "Start Tracking",
+                    text = if (!hasActivityPermission) "Grant Activity Permission" else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !hasNotificationPermission) "Grant Notification Permission" else if (isTracking) "Stop Tracking" else "Start Tracking",
                     color = Color.White,
                     fontSize = 16.sp
                 )

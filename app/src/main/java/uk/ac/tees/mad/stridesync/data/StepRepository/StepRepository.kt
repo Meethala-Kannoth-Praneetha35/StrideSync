@@ -16,7 +16,7 @@ class StepRepository @Inject constructor(
 ) {
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
 
-    private fun todayDate(): String = dateFormat.format(Date())
+    fun todayDate(): String = dateFormat.format(Date())
 
     suspend fun saveSteps(steps: Int, userId: String) {
         val date = todayDate()
@@ -32,6 +32,8 @@ class StepRepository @Inject constructor(
     }
 
     fun getTodaySteps(): Flow<StepEntity?> = stepDao.getStepsByDate(todayDate())
+
+    suspend fun getStepsByDateSync(date: String): StepEntity? = stepDao.getStepsByDateSync(date)
 
     fun getHistory(): Flow<List<StepEntity>> = stepDao.getAllSteps()
 }
