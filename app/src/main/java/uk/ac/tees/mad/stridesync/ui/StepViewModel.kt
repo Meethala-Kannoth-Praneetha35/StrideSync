@@ -21,6 +21,7 @@ import uk.ac.tees.mad.stridesync.data.StepRepository.StepRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import android.app.ActivityManager
 import android.content.Context
+import uk.ac.tees.mad.stridesync.data.local.StepEntity
 
 @HiltViewModel
 class StepViewModel @Inject constructor(
@@ -35,6 +36,8 @@ class StepViewModel @Inject constructor(
     private val _isTracking = MutableStateFlow(false)
     val isTracking: StateFlow<Boolean> = _isTracking
 
+    val steps : StateFlow<List<StepEntity>> = repository.getHistory()
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     val todaySteps: StateFlow<Int> = repository.getTodaySteps()
         .map { entity -> entity?.steps ?: 0 }
         .stateIn(viewModelScope, SharingStarted.Lazily, 0)

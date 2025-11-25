@@ -40,6 +40,7 @@ import uk.ac.tees.mad.stridesync.ui.AuthenticationScreen
 import uk.ac.tees.mad.stridesync.ui.HomeScreen
 import uk.ac.tees.mad.stridesync.ui.SplashScreen
 import uk.ac.tees.mad.stridesync.ui.StepViewModel
+import uk.ac.tees.mad.stridesync.ui.history.StepHistoryScreen
 import uk.ac.tees.mad.stridesync.ui.theme.AppColors
 import uk.ac.tees.mad.stridesync.ui.theme.StrideSyncTheme
 
@@ -66,10 +67,17 @@ class MainActivity : ComponentActivity() {
                     composable("home"){
                         HomeScreen(
                             viewModel = stepViewModel,
-                            onHistoryClick = {},
+                            onHistoryClick = {
+                                navController.navigate("history")
+                            },
                         onLeaderboardClick = {},
                         onProfileClick = {},
                         onNotificationsClick = {})
+                    }
+                    composable("history") {
+                        StepHistoryScreen(stepViewModel) {
+                            navController.popBackStack()
+                        }
                     }
                 }
             }
