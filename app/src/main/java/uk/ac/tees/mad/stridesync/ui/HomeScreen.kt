@@ -147,7 +147,20 @@ fun HomeScreen(
         }
     }
 
+    val motivationalQuotes = listOf(
+        "Every step you take is a step toward a healthier you 💪",
+        "Small steps every day add up to big results 🚶",
+        "Consistency is the key to progress 🔑",
+        "You don’t have to go fast, you just have to go 👣",
+        "One step at a time, one day at a time 🌟",
+        "Walking is the best medicine for the body and mind 🧘",
+        "Push yourself, because no one else is going to do it for you 🔥",
+        "Your only limit is you 🚀",
+        "Stay active, stay happy, stay strong 💯",
+        "Progress, not perfection ✨"
+    )
 
+    val randomQuote = motivationalQuotes.random()
 
     LaunchedEffect(Unit) {
         viewModel.refreshSteps()
@@ -273,12 +286,6 @@ fun HomeScreen(
                     onClick = onHistoryClick
                 )
                 QuickActionCard(
-                    title = "Leaderboard",
-                    icon = Icons.Default.EmojiEvents,
-                    bgColor = AppColors.Accent,
-                    onClick = onLeaderboardClick
-                )
-                QuickActionCard(
                     title = "Profile",
                     icon = Icons.Default.Person,
                     bgColor = AppColors.Primary,
@@ -296,14 +303,14 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
-                        text = "Leaderboard Highlight 🏆",
+                        text = "Motivation 💡",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.SemiBold,
                             color = AppColors.Secondary
                         )
                     )
                     Text(
-                        text = "You are ranked #5 this week. Keep moving to climb higher!",
+                        text = randomQuote,
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = AppColors.TextPrimary
                         )

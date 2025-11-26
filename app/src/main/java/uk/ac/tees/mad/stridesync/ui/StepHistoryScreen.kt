@@ -116,9 +116,9 @@ fun StepHistoryCard(step: StepEntity) {
         step.date
     }
 
-    val distanceMeters = (step.steps * 0.762f) // average step length ~0.762m
+    val distanceMeters = (step.steps * 0.762f)
     val distanceKm = distanceMeters / 1000f
-    val kcal = step.steps * 0.05f // rough estimate
+    val kcal = step.steps * 0.05f
 
     Card(
         modifier = Modifier.fillMaxWidth(),
