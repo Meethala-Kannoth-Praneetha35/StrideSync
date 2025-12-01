@@ -62,8 +62,7 @@ fun HomeScreen(
     userName: String = "John",
     stepGoal: Int = 12000,
     onHistoryClick: () -> Unit,
-    onLeaderboardClick: () -> Unit,
-    onProfileClick: () -> Unit,
+    onProfileClick: (name : String) -> Unit,
     onNotificationsClick: () -> Unit
 ) {
     val todaySteps by viewModel.todaySteps.collectAsState()
@@ -158,7 +157,7 @@ fun HomeScreen(
                     )
                 },
                 actions = {
-                    IconButton(onClick = onNotificationsClick) {
+                    IconButton(onClick = { onProfileClick(userName) }) {
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = "Notifications",
@@ -263,7 +262,7 @@ fun HomeScreen(
                     title = "Profile",
                     icon = Icons.Default.Person,
                     bgColor = AppColors.Primary,
-                    onClick = onProfileClick
+                    onClick = { onProfileClick(userName) }
                 )
             }
 
