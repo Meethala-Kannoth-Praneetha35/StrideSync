@@ -30,6 +30,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,6 +62,15 @@ fun AuthenticationScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    val loginTrue = viewModel.loginBoolean.value
+
+    LaunchedEffect(loginTrue) {
+        if (loginTrue) {
+            navController.navigate("home") {
+                popUpTo(0)
+            }
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),

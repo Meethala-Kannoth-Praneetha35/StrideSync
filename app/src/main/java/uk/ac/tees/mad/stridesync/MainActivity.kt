@@ -41,14 +41,14 @@ class MainActivity : ComponentActivity() {
                     composable("home"){
                         HomeScreen(
                             viewModel = stepViewModel,
+                            authViewModel = authViewModel,
                             onHistoryClick = {
                                 navController.navigate("history")
                             },
                         onProfileClick = {
                             navController.navigate("profile/$it")
 
-                        },
-                        onNotificationsClick = {})
+                        })
                     }
                     composable("history") {
                         StepHistoryScreen(stepViewModel) {
@@ -57,7 +57,15 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("profile/{userName}") { backStackEntry ->
                         val userName = backStackEntry.arguments?.getString("userName")
-                        ProfileScreen(userName, onSaveName = {}, onLogout = {})
+                        ProfileScreen(userName, onSaveName = { name, context ->
+                            authViewModel.updateUserName(name, context)
+                            navController.popBackStack()
+                        }, onLogout = {
+                            authViewModel.logout()
+                            navController.navigate("auth"){
+                                popUpTo(0)
+                            }
+                        })
                     }
                 }
             }

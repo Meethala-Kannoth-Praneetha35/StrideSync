@@ -59,12 +59,14 @@ import java.util.Calendar
 @Composable
 fun HomeScreen(
     viewModel: StepViewModel,
-    userName: String = "John",
+    authViewModel: AuthViewModel,
     stepGoal: Int = 12000,
     onHistoryClick: () -> Unit,
     onProfileClick: (name : String) -> Unit,
-    onNotificationsClick: () -> Unit
 ) {
+    val userName by remember {
+        mutableStateOf(authViewModel.user.value?.name?:"User")
+    }
     val todaySteps by viewModel.todaySteps.collectAsState()
     val distanceMeters by viewModel.distanceMeters.collectAsState()
     val distanceKm by viewModel.distanceKm.collectAsState()

@@ -1,5 +1,6 @@
 package uk.ac.tees.mad.stridesync.ui
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -11,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -20,10 +22,11 @@ import uk.ac.tees.mad.stridesync.ui.theme.AppColors
 @Composable
 fun ProfileScreen(
     userName: String?,
-    onSaveName: (String) -> Unit,
+    onSaveName: (String, Context) -> Unit,
     onLogout: () -> Unit
 ) {
-    var name by remember { mutableStateOf(userName ?: "") }
+    val context = LocalContext.current
+    var name by remember { mutableStateOf(userName ?: "No Name") }
 
     Scaffold(
         containerColor = AppColors.Background,
@@ -51,7 +54,6 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Avatar Circle
             Box(
                 modifier = Modifier
                     .size(100.dp)
@@ -67,7 +69,6 @@ fun ProfileScreen(
                 )
             }
 
-            // Name Edit Field
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
@@ -80,9 +81,8 @@ fun ProfileScreen(
                 )
             )
 
-            // Save Button
             Button(
-                onClick = { onSaveName(name) },
+                onClick = { onSaveName(name,context) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = AppColors.Primary),
                 shape = MaterialTheme.shapes.medium
@@ -92,7 +92,6 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Logout Button
             OutlinedButton(
                 onClick = onLogout,
                 modifier = Modifier.fillMaxWidth(),

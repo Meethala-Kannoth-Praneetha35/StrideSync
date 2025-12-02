@@ -5,12 +5,10 @@ import android.widget.Toast
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import uk.ac.tees.mad.stridesync.model.User
 
@@ -24,13 +22,24 @@ class AuthViewModel @Inject constructor(
     init {
         if(authentication.currentUser != null){
             loginBoolean.value = true
+            getCurrentUserInformation()
+
         }
     }
 
     val loading = mutableStateOf(false)
+    val user = mutableStateOf<User?>(null)
+
 
     fun getCurrentUserInformation(){
-
+        viewModelScope.launch {
+            firestore.collection("users").document(authentication.currentUser!!.uid).get()
+                .addOnSuccessListener {
+                    user.value = it.toObject(User::class.java)
+                }.addOnFailureListener {
+                    user.value = null
+                }
+        }
     }
 
     fun login(context: Context, email : String, password : String){
@@ -38,6 +47,7 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             authentication.signInWithEmailAndPassword(email, password)
                 .addOnSuccessListener {
+                    loginBoolean.value = true
                     loading.value = false
                     Toast.makeText(context, "Login Successful", Toast.LENGTH_SHORT).show()
                     getCurrentUserInformation()
@@ -62,6 +72,7 @@ class AuthViewModel @Inject constructor(
                     ).addOnSuccessListener {
                         loading.value = false
                         Toast.makeText(context, "Sign Up Successful", Toast.LENGTH_SHORT).show()
+                        loginBoolean.value = true
                         getCurrentUserInformation()
                     }.addOnFailureListener {
                         loading.value = false
@@ -74,5 +85,23 @@ class AuthViewModel @Inject constructor(
                 }
         }
 
+    }
+
+    fun updateUserName(string: String, context: Context) {
+        viewModelScope.launch {
+            firestore.collection("users").document(authentication.currentUser!!.uid).update("name", string)
+                .addOnSuccessListener {
+                    getCurrentUserInformation()
+                    Toast.makeText(context, "Name Updated", Toast.LENGTH_SHORT).show()
+                }.addOnFailureListener {
+                    Toast.makeText(context, "Name Update Failed", Toast.LENGTH_SHORT).show()
+                }
+        }
+    }
+
+    fun logout(){
+        authentication.signOut()
+        loginBoolean.value = false
+        user.value = null
     }
 }
