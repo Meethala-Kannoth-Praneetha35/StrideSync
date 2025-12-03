@@ -64,9 +64,7 @@ fun HomeScreen(
     onHistoryClick: () -> Unit,
     onProfileClick: (name : String) -> Unit,
 ) {
-    val userName by remember {
-        mutableStateOf(authViewModel.user.value?.name?:"User")
-    }
+    val userName = authViewModel.user.collectAsState().value?.name?:"User"
     val todaySteps by viewModel.todaySteps.collectAsState()
     val distanceMeters by viewModel.distanceMeters.collectAsState()
     val distanceKm by viewModel.distanceKm.collectAsState()

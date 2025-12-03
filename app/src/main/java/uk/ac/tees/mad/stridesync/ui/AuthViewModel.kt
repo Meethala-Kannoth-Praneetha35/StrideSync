@@ -9,6 +9,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import uk.ac.tees.mad.stridesync.model.User
 
@@ -28,7 +29,7 @@ class AuthViewModel @Inject constructor(
     }
 
     val loading = mutableStateOf(false)
-    val user = mutableStateOf<User?>(null)
+    val user = MutableStateFlow<User?>(null)
 
 
     fun getCurrentUserInformation(){
